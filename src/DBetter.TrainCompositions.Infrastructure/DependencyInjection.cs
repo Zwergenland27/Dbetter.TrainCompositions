@@ -1,5 +1,6 @@
 using CleanMediator;
 using DBetter.TrainCompositions.Application.Abstractions;
+using DBetter.TrainCompositions.Infrastructure.PostgreSQL;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,5 +14,7 @@ public static class DependencyInjection
         {
             options.RegisterServicesFromAssembly(typeof(IUnitOfWork).Assembly);
         });
+        
+        services.AddPostgreSql(configuration);
     }
 }
