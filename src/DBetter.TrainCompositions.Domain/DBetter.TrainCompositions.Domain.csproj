@@ -6,4 +6,10 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Zwergenland.CleanDomainValidation" Version="1.2.0-pre1" />
+      <PackageReference Include="Zwergenland.CleanMediator" Version="1.1.1" />
+      <PackageReference Include="Zwergenland.CleanMessageBus.Abstractions" Version="1.2.1" />
+    </ItemGroup>
+
 </Project>
