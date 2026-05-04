@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.6"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DBetter.TrainCompositions.Application\DBetter.TrainCompositions.Application.csproj" />
+      <ProjectReference Include="..\DBetter.TrainCompositions.Domain\DBetter.TrainCompositions.Domain.csproj" />
+      <ProjectReference Include="..\DBetter.TrainCompositions.Infrastructure\DBetter.TrainCompositions.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>

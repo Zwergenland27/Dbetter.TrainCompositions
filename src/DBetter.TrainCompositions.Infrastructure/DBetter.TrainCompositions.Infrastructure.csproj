@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DBetter.TrainCompositions.Application\DBetter.TrainCompositions.Application.csproj" />
+      <ProjectReference Include="..\DBetter.TrainCompositions.Domain\DBetter.TrainCompositions.Domain.csproj" />
+    </ItemGroup>
+
+</Project>

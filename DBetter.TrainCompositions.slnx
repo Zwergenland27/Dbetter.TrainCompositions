@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DBetter.TrainCompositions.Application/DBetter.TrainCompositions.Application.csproj" />
+    <Project Path="src/DBetter.TrainCompositions.Domain/DBetter.TrainCompositions.Domain.csproj" />
+    <Project Path="src/DBetter.TrainCompositions.Infrastructure/DBetter.TrainCompositions.Infrastructure.csproj" />
+    <Project Path="src/DBetter.TrainCompositions.WebApi/DBetter.TrainCompositions.WebApi.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+</Solution>
