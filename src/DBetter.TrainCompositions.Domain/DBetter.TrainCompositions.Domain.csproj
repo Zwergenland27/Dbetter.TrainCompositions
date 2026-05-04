@@ -11,5 +11,8 @@
       <PackageReference Include="Zwergenland.CleanMediator" Version="1.1.1" />
       <PackageReference Include="Zwergenland.CleanMessageBus.Abstractions" Version="1.2.1" />
     </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="DBetter.TrainCompositions.Infrastructure"/>
+    </ItemGroup>
 
 </Project>
