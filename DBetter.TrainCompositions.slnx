@@ -5,5 +5,8 @@
     <Project Path="src/DBetter.TrainCompositions.Infrastructure/DBetter.TrainCompositions.Infrastructure.csproj" />
     <Project Path="src/DBetter.TrainCompositions.WebApi/DBetter.TrainCompositions.WebApi.csproj" />
   </Folder>
-  <Folder Name="/tests/" />
+  <Folder Name="/tests/">
+    <Project Path="tests/DBetter.TrainCompositions.Domain.Tests/DBetter.TrainCompositions.Domain.Tests.csproj" />
+    <Project Path="tests/DBetter.TrainCompositions.Infrastructure.Tests/DBetter.TrainCompositions.Infrastructure.Tests.csproj" />
+  </Folder>
 </Solution>

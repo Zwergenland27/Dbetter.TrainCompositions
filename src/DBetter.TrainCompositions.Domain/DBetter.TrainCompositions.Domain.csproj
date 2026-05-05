@@ -13,6 +13,8 @@
     </ItemGroup>
     <ItemGroup>
         <InternalsVisibleTo Include="DBetter.TrainCompositions.Infrastructure"/>
+        <InternalsVisibleTo Include="DBetter.TrainCompositions.Infrastructure.Tests"/>
+        <InternalsVisibleTo Include="DBetter.TrainCompositions.Domain.Tests"/>
     </ItemGroup>
 
 </Project>
