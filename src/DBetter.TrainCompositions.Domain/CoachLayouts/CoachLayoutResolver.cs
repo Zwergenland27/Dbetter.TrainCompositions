@@ -26,6 +26,6 @@ public class CoachLayoutResolver(ICoachLayoutRepository repository)
             existing.Add(created);
         }
         
-        return existing;
+        return existing.OrderBy(e => coachIdentifier.IndexOf(e.Identifier)).ToList();
     }
 }

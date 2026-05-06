@@ -111,4 +111,55 @@ public class CoachLayoutResolverTests
         Assert.Contains(existingLayout, result);
         Assert.Contains(result, r => r.Identifier == missingIdentifier);
     }
+    
+    [Fact]
+    public async Task ResolveMany_ShouldReturnLayoutsInSameOrder_WhenAllIdentifiersExist()
+    {
+        var identifiers = new List<CoachLayoutIdentifier>
+        {
+            new("I8022"),
+            new("I8024"),
+            new("I8044"),
+        };
+        _repository.FindManyAsync(Arg.Any<List<CoachLayoutIdentifier>>())
+            .Returns(identifiers.AsEnumerable().Reverse().Select(i => MakeCoachLayout(i.Value)).ToList());
+
+        var result = await _sut.ResolveMany(identifiers);
+
+        Assert.Equal(identifiers.Select(i => i.Value), result.Select(r => r.Identifier.Value));
+    }
+
+    [Fact]
+    public async Task ResolveMany_ShouldReturnLayoutsInSameOrder_WhenAllIdentifiersMissing()
+    {
+        var identifiers = new List<CoachLayoutIdentifier>
+        {
+            new("I8022"),
+            new("I8024"),
+            new("I8044"),
+        };
+        _repository.FindManyAsync(Arg.Any<List<CoachLayoutIdentifier>>()).Returns([]);
+
+        var result = await _sut.ResolveMany(identifiers);
+
+        Assert.Equal(identifiers.Select(i => i.Value), result.Select(r => r.Identifier.Value));
+    }
+
+    [Fact]
+    public async Task ResolveMany_ShouldReturnLayoutsInSameOrder_WhenSomeIdentifiersMissing()
+    {
+        var identifiers = new List<CoachLayoutIdentifier>
+        {
+            new("I8022"),
+            new("I8024"),
+            new("I8044"),
+        };
+        
+        _repository.FindManyAsync(Arg.Any<List<CoachLayoutIdentifier>>())
+            .Returns([MakeCoachLayout("I8024")]);
+
+        var result = await _sut.ResolveMany(identifiers);
+
+        Assert.Equal(identifiers.Select(i => i.Value), result.Select(r => r.Identifier.Value));
+    }
 }
