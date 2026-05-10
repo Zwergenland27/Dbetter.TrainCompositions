@@ -1,5 +1,6 @@
 using DBetter.TrainCompositions.Infrastructure.CoachLayouts;
 using DBetter.TrainCompositions.Infrastructure.OutboxPattern;
+using DBetter.TrainCompositions.Infrastructure.PlannedFormations;
 using Microsoft.EntityFrameworkCore;
 
 namespace DBetter.TrainCompositions.Infrastructure.PostgreSQL;
@@ -12,6 +13,8 @@ public class DBetterContext(DbContextOptions<DBetterContext> options): DbContext
     public DbSet<OutboxMessage> OutboxMessages { get; set; }
     
     public DbSet<CoachLayoutPersistenceDto> CoachLayouts { get; set; }
+    
+    public DbSet<PlannedFormationPersistenceDto> PlannedFormations { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
