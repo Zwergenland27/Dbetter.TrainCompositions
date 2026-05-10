@@ -32,18 +32,15 @@ public class PlannedFormationRepository(DBetterContext db): IPlannedFormationRep
     public async Task<List<PlannedFormation>> FindManyAsync(IEnumerable<PlannedFormationSnapshot> coachSequencesToFind)
     {
         var coachSequenceHashes = new List<string>();
-        var reversedCoachSequenceHashes = new List<string>();
 
         foreach (var plannedFormation in coachSequencesToFind)
         {
             coachSequenceHashes.Add(PlannedFormationPersistenceDto.ComputeCoachSequenceHash(plannedFormation.Coaches));
-            plannedFormation.Coaches.Reverse();
-            reversedCoachSequenceHashes.Add(PlannedFormationPersistenceDto.ComputeCoachSequenceHash(plannedFormation.Coaches));
         }
         
         var dtos = await db.PlannedFormations.Where(formation =>
                 coachSequenceHashes.Contains(formation.CoachSequenceHash) ||
-                reversedCoachSequenceHashes.Contains(formation.ReverseCoachSequenceHash))
+                coachSequenceHashes.Contains(formation.ReverseCoachSequenceHash))
             .Distinct()
             .ToListAsync();
         return dtos.Select(dto => dto.ToDomain()).ToList();
