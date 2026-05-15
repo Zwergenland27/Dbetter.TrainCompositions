@@ -1,6 +1,5 @@
 using CleanDomainValidation.Domain;
 using DBetter.TrainCompositions.Domain.Abstractions;
-using DBetter.TrainCompositions.Domain.CoachLayouts.ValueObjects;
 using DBetter.TrainCompositions.Domain.PlannedFormations.Coaches;
 using DBetter.TrainCompositions.Domain.PlannedFormations.Coaches.ValueObjects;
 using DBetter.TrainCompositions.Domain.PlannedFormations.ValueObjects;
@@ -46,7 +45,7 @@ public class PlannedFormation: AggregateRoot<PlannedFormationId>
     /// </summary>
     /// <param name="snapshot">coach layout that should be matched</param>
     /// <returns>True, if the snapshot matches</returns>
-    internal bool Matches(PlannedFormationSnapshot snapshot)
+    public bool Matches(PlannedFormationSnapshot snapshot)
     {
         return CoachSequence.Zip(snapshot.Coaches).All(pair => pair.First.LayoutId == pair.Second);
     }
