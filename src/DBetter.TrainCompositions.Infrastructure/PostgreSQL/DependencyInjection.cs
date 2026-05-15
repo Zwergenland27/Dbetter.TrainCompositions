@@ -1,3 +1,4 @@
+using DBetter.TrainCompositions.Application.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,5 +20,6 @@ public static class DependencyInjection
         {
             options.UseNpgsql(settings.ConnectionString);
         });
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
     }
 }
