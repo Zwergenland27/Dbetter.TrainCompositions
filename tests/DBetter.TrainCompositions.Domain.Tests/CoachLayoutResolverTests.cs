@@ -7,12 +7,10 @@ namespace DBetter.TrainCompositions.Domain.Tests;
 public class CoachLayoutResolverTests
 {
     private readonly ICoachLayoutRepository _repository;
-    private readonly CoachLayoutResolver _sut;
     
     public CoachLayoutResolverTests()
     {
         _repository = Substitute.For<ICoachLayoutRepository>();
-        _sut = new CoachLayoutResolver(_repository);
     }
     
     private static CoachLayout MakeCoachLayout(string identifier) =>
@@ -25,15 +23,16 @@ public class CoachLayoutResolverTests
     [Fact]
     public async Task ResolveMany_ShouldReturnAllExistingWithoutCreating_WhenAllIdentifiersExist()
     {
+        var sut = new CoachLayoutResolver(_repository, []);
         var identifiers = new List<CoachLayoutIdentifier>
         {
             new("I8044"),
             new("I8042"),
         };
         var existing = identifiers.Select(i => MakeCoachLayout(i.Value)).ToList();
-        _repository.FindManyAsync(identifiers).Returns(existing);
+        _repository.FindManyAsync(Arg.Any<IEnumerable<CoachLayoutIdentifier>>()).Returns(existing);
 
-        var result = await _sut.ResolveMany(identifiers);
+        var result = await sut.ResolveMany(identifiers);
 
         Assert.Equal(2, result.Count);
         _repository.DidNotReceive().Store(Arg.Any<CoachLayout>());
@@ -42,14 +41,15 @@ public class CoachLayoutResolverTests
     [Fact]
     public async Task ResolveMany_ShouldCreateAndStoreAll_WhenAllIdentifiersMissing()
     {
+        var sut = new CoachLayoutResolver(_repository, []);
         var identifiers = new List<CoachLayoutIdentifier>
         {
             new("I8044"),
             new("I8042"),
         };
-        _repository.FindManyAsync(identifiers).Returns([]);
+        _repository.FindManyAsync(Arg.Any<IEnumerable<CoachLayoutIdentifier>>()).Returns([]);
 
-        var result = await _sut.ResolveMany(identifiers);
+        var result = await sut.ResolveMany(identifiers);
 
         Assert.Equal(2, result.Count);
         _repository.Received(2).Store(Arg.Any<CoachLayout>());
@@ -58,30 +58,54 @@ public class CoachLayoutResolverTests
     [Fact]
     public async Task ResolveMany_ShouldCreateOnlyMissing_WhenSomeIdentifiersMissing()
     {
+        var sut = new CoachLayoutResolver(_repository, []);
         var existingIdentifier = new CoachLayoutIdentifier("I8042");
         var missingIdentifier = new CoachLayoutIdentifier("I8044");
         var identifiers = new List<CoachLayoutIdentifier> { existingIdentifier, missingIdentifier };
-        _repository.FindManyAsync(identifiers).Returns([MakeCoachLayout("I8042")]);
+        _repository.FindManyAsync(Arg.Any<IEnumerable<CoachLayoutIdentifier>>()).Returns([MakeCoachLayout("I8042")]);
 
-        var result = await _sut.ResolveMany(identifiers);
+        var result = await sut.ResolveMany(identifiers);
 
         Assert.Equal(2, result.Count);
         _repository.Received(1).Store(Arg.Any<CoachLayout>());
     }
     
     [Fact]
-    public async Task ResolveMany_ShouldCreateLayoutWithCorrectIdentifier_WhenSomeIdentifierIsMissing()
+    public async Task ResolveMany_ShouldCreateLayoutWithCorrectIdentifier_WhenSomeIdentifiersMissing()
     {
+        var sut = new CoachLayoutResolver(_repository, []);
         var missingIdentifier = new CoachLayoutIdentifier("I8044");
         var identifiers = new List<CoachLayoutIdentifier>
         {
             new("I8042"),
             missingIdentifier,
         };
-        _repository.FindManyAsync(identifiers).Returns([MakeCoachLayout("I8042")]);
+        _repository.FindManyAsync(Arg.Any<IEnumerable<CoachLayoutIdentifier>>()).Returns([MakeCoachLayout("I8042")]);
 
-        var result = await _sut.ResolveMany(identifiers);
+        var result = await sut.ResolveMany(identifiers);
 
+        Assert.Single(result, r => r.Identifier == missingIdentifier);
+        var created = result.Single(r => r.Identifier == missingIdentifier);
+        Assert.Equal(missingIdentifier, created.Identifier);
+    }
+
+   
+    [Fact]
+    public async Task ResolveMany_ShouldNotCreateAndStoreDuplicateLayouts_WhenDuplicateIdentifiersNotExist()
+    {
+        var sut = new CoachLayoutResolver(_repository, []);
+        var missingIdentifier = new CoachLayoutIdentifier("I8044");
+        var identifiers = new List<CoachLayoutIdentifier>
+        {
+            missingIdentifier,
+            new ("I8044")
+        };
+        _repository.FindManyAsync(Arg.Any<IEnumerable<CoachLayoutIdentifier>>()).Returns([]);
+        
+        var result = await sut.ResolveMany(identifiers);
+
+        Assert.Single(result, r => r.Identifier == missingIdentifier);
+        _repository.Received(1).Store(Arg.Is<CoachLayout>(c => c.Identifier == missingIdentifier));
         var created = result.Single(r => r.Identifier == missingIdentifier);
         Assert.Equal(missingIdentifier, created.Identifier);
     }
@@ -89,9 +113,10 @@ public class CoachLayoutResolverTests
     [Fact]
     public async Task ResolveMany_ShouldReturnEmpty_WhenInputIsEmpty()
     {
-        _repository.FindManyAsync(Arg.Any<List<CoachLayoutIdentifier>>()).Returns([]);
+        var sut = new CoachLayoutResolver(_repository, []);
+        _repository.FindManyAsync(Arg.Any<IEnumerable<CoachLayoutIdentifier>>()).Returns([]);
 
-        var result = await _sut.ResolveMany([]);
+        var result = await sut.ResolveMany([]);
 
         Assert.Empty(result);
         _repository.DidNotReceive().Store(Arg.Any<CoachLayout>());
@@ -100,66 +125,71 @@ public class CoachLayoutResolverTests
     [Fact]
     public async Task ResolveMany_ShouldReturnBothExistingAndCreated_WhenSomeIdentifiersMissing()
     {
+        var sut = new CoachLayoutResolver(_repository, []);
         var existingIdentifier = new CoachLayoutIdentifier("I8082");
         var missingIdentifier = new CoachLayoutIdentifier("I8044");
         var identifiers = new List<CoachLayoutIdentifier> { existingIdentifier, missingIdentifier };
         var existingLayout = MakeCoachLayout("I8082");
-        _repository.FindManyAsync(identifiers).Returns([existingLayout]);
+        _repository.FindManyAsync(Arg.Any<IEnumerable<CoachLayoutIdentifier>>()).Returns([existingLayout]);
 
-        var result = await _sut.ResolveMany(identifiers);
+        var result = await sut.ResolveMany(identifiers);
 
         Assert.Contains(existingLayout, result);
         Assert.Contains(result, r => r.Identifier == missingIdentifier);
     }
+
+    [Fact]
+    public async Task ResolveMany_ShouldNotStore_WhenIdentifierKnown()
+    {
+        var knownIdentifier = new CoachLayoutIdentifier("I8082");
+        var knownCoachLayout = CoachLayout.CreateFromPlanned(knownIdentifier);
+        var sut = new CoachLayoutResolver(_repository, [knownCoachLayout]);
+        var identifiers = new List<CoachLayoutIdentifier> { knownIdentifier };
+        _repository.FindManyAsync(Arg.Any<IEnumerable<CoachLayoutIdentifier>>()).Returns([]);
+        
+        _ = await sut.ResolveMany(identifiers);
+        
+        _repository.DidNotReceive().Store(Arg.Any<CoachLayout>());
+    }
     
     [Fact]
-    public async Task ResolveMany_ShouldReturnLayoutsInSameOrder_WhenAllIdentifiersExist()
+    public async Task ResolveMany_ShouldNotStoreTwice_WhenDuplicateIdentifier()
     {
-        var identifiers = new List<CoachLayoutIdentifier>
-        {
-            new("I8022"),
-            new("I8024"),
-            new("I8044"),
-        };
-        _repository.FindManyAsync(Arg.Any<List<CoachLayoutIdentifier>>())
-            .Returns(identifiers.AsEnumerable().Reverse().Select(i => MakeCoachLayout(i.Value)).ToList());
-
-        var result = await _sut.ResolveMany(identifiers);
-
-        Assert.Equal(identifiers.Select(i => i.Value), result.Select(r => r.Identifier.Value));
-    }
-
-    [Fact]
-    public async Task ResolveMany_ShouldReturnLayoutsInSameOrder_WhenAllIdentifiersMissing()
-    {
-        var identifiers = new List<CoachLayoutIdentifier>
-        {
-            new("I8022"),
-            new("I8024"),
-            new("I8044"),
-        };
-        _repository.FindManyAsync(Arg.Any<List<CoachLayoutIdentifier>>()).Returns([]);
-
-        var result = await _sut.ResolveMany(identifiers);
-
-        Assert.Equal(identifiers.Select(i => i.Value), result.Select(r => r.Identifier.Value));
-    }
-
-    [Fact]
-    public async Task ResolveMany_ShouldReturnLayoutsInSameOrder_WhenSomeIdentifiersMissing()
-    {
-        var identifiers = new List<CoachLayoutIdentifier>
-        {
-            new("I8022"),
-            new("I8024"),
-            new("I8044"),
-        };
+        var identifier = new CoachLayoutIdentifier("I8082");
+        var sut = new CoachLayoutResolver(_repository, []);
+        var identifiers = new List<CoachLayoutIdentifier> { identifier, identifier };
+        _repository.FindManyAsync(Arg.Any<IEnumerable<CoachLayoutIdentifier>>()).Returns([]);
         
-        _repository.FindManyAsync(Arg.Any<List<CoachLayoutIdentifier>>())
-            .Returns([MakeCoachLayout("I8024")]);
-
-        var result = await _sut.ResolveMany(identifiers);
-
-        Assert.Equal(identifiers.Select(i => i.Value), result.Select(r => r.Identifier.Value));
+        _ = await sut.ResolveMany(identifiers);
+        
+        _repository.Received(1).Store(Arg.Any<CoachLayout>());
+    }
+    
+    [Fact]
+    public async Task ResolveMany_ShouldAddToKnownList_WhenIdentifierCreated()
+    {
+        var identifier = new CoachLayoutIdentifier("I8082");
+        var knownCoachLayouts = new List<CoachLayout>();
+        var sut = new CoachLayoutResolver(_repository, knownCoachLayouts);
+        var identifiers = new List<CoachLayoutIdentifier> { identifier };
+        _repository.FindManyAsync(Arg.Any<IEnumerable<CoachLayoutIdentifier>>()).Returns([]);
+        
+        _ = await sut.ResolveMany(identifiers);
+        
+        Assert.Single(knownCoachLayouts,  l => l.Identifier == identifier);
+    }
+    
+    [Fact]
+    public async Task ResolveMany_ShouldAddToKnownList_WhenLoadedFromRepository()
+    {
+        var identifier = new CoachLayoutIdentifier("I8082");
+        var knownCoachLayouts = new List<CoachLayout>();
+        var sut = new CoachLayoutResolver(_repository, knownCoachLayouts);
+        var identifiers = new List<CoachLayoutIdentifier> { identifier };
+        _repository.FindManyAsync(Arg.Any<IEnumerable<CoachLayoutIdentifier>>()).Returns([MakeCoachLayout("I8082")]);
+        
+        _ = await sut.ResolveMany(identifiers);
+        
+        Assert.Single(knownCoachLayouts,  l => l.Identifier == identifier);
     }
 }
