@@ -4,19 +4,21 @@ using DBetter.TrainCompositions.Domain.CoachLayouts.ValueObjects;
 
 namespace DBetter.TrainCompositions.Domain.PlannedFormations;
 
-/// <summary>
-/// Methods to resolve planned formations
-/// </summary>
-public class PlannedFormationResolver(IPlannedFormationRepository repository, List<PlannedFormation> knownPlannedFormations)
+/// <inheritdoc/>
+public class PlannedFormationResolver(IPlannedFormationRepository repository): IPlannedFormationResolver
 {
-    /// <summary>
-    /// Resolve multiple planned formations
-    /// </summary>
-    /// <remarks>
-    /// Not known planned formations will be created and stored automatically
-    /// </remarks>
-    /// <param name="coachSequences">List of the coach sequences of the formations</param>
-    /// <returns>Planned formations for distinct requested coach sequences</returns>
+    private readonly List<PlannedFormation> _knownPlannedFormations = [];
+
+    internal PlannedFormationResolver(IPlannedFormationRepository repository, List<PlannedFormation> plannedFormations)
+        : this(repository)
+    {
+        _knownPlannedFormations = plannedFormations;
+    }
+    
+    /// <inheritdoc/>
+    public IReadOnlyList<PlannedFormation> AllKnownPlannedFormations => _knownPlannedFormations.AsReadOnly();
+    
+    /// <inheritdoc/>
     public async Task<List<PlannedFormation>> ResolveManyAsync(List<PlannedFormationSnapshot> coachSequences)
     {
         coachSequences = coachSequences.Distinct(new PlannedFormationSnapshotComparer()).ToList();
@@ -25,7 +27,7 @@ public class PlannedFormationResolver(IPlannedFormationRepository repository, Li
 
         foreach (var coachSequence in coachSequences)
         {
-            var known = knownPlannedFormations.FirstOrDefault(pf => pf.Matches(coachSequence));
+            var known = _knownPlannedFormations.FirstOrDefault(pf => pf.Matches(coachSequence));
             if (known is not null)
             {
                 fromKnown.Add(known);
@@ -34,7 +36,7 @@ public class PlannedFormationResolver(IPlannedFormationRepository repository, Li
         }
             
         var fromRepository = await repository.FindManyAsync(stillMissing);
-        knownPlannedFormations.AddRange(fromRepository);
+        _knownPlannedFormations.AddRange(fromRepository);
         
         var existing = fromKnown.Concat(fromRepository).ToList();
         
@@ -47,7 +49,7 @@ public class PlannedFormationResolver(IPlannedFormationRepository repository, Li
             var created = PlannedFormation.Create(unresolvedSequence);
             if (created.HasFailed) continue;
             repository.Store(created.Value);
-            knownPlannedFormations.Add(created.Value);
+            _knownPlannedFormations.Add(created.Value);
             existing.Add(created.Value);
         }
 

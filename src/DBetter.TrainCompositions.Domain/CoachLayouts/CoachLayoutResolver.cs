@@ -2,23 +2,24 @@ using DBetter.TrainCompositions.Domain.CoachLayouts.ValueObjects;
 
 namespace DBetter.TrainCompositions.Domain.CoachLayouts;
 
-/// <summary>
-/// Methods to resolve coaches
-/// </summary>
-public class CoachLayoutResolver(ICoachLayoutRepository repository, List<CoachLayout> knownCoachLayouts)
+/// <inheritdoc/>
+public class CoachLayoutResolver(ICoachLayoutRepository repository): ICoachLayoutResolver
 {
-    /// <summary>
-    /// Resolve many coaches
-    /// </summary>
-    /// <remarks>
-    /// Not existing coach layouts will be created and stored automatically
-    /// </remarks>
-    /// <param name="coachIdentifier">Identifier, whose layouts are searched</param>
-    /// <returns>Coach Layout aggregates for all requested identifiers</returns>
-    public async Task<List<CoachLayout>> ResolveMany(List<CoachLayoutIdentifier> coachIdentifier)
+    private readonly List<CoachLayout> _knownCoachLayouts = [];
+
+    internal CoachLayoutResolver(ICoachLayoutRepository repository, List<CoachLayout> knownCoachLayouts) : this(repository)
+    {
+        _knownCoachLayouts = knownCoachLayouts;
+    }
+    
+    /// <inheritdoc/>
+    public IReadOnlyList<CoachLayout> AllKnownCoachLayouts => _knownCoachLayouts.AsReadOnly();
+    
+    /// <inheritdoc/>
+    public async Task<List<CoachLayout>> ResolveManyAsync(List<CoachLayoutIdentifier> coachIdentifier)
     {
         coachIdentifier = coachIdentifier.Distinct().ToList();
-        var fromKnown = knownCoachLayouts
+        var fromKnown = _knownCoachLayouts
             .Where(cl => coachIdentifier.Contains(cl.Identifier))
             .ToList();
 
@@ -26,7 +27,7 @@ public class CoachLayoutResolver(ICoachLayoutRepository repository, List<CoachLa
             .Except(fromKnown.Select(c => c.Identifier));
         
         var fromRepository = await repository.FindManyAsync(stillMissing);
-        knownCoachLayouts.AddRange(fromRepository);
+        _knownCoachLayouts.AddRange(fromRepository);
 
         var existing = fromKnown.Concat(fromRepository).ToList();
         
@@ -38,7 +39,7 @@ public class CoachLayoutResolver(ICoachLayoutRepository repository, List<CoachLa
         {
             var created = CoachLayout.CreateFromPlanned(missingCoachLayout);
             repository.Store(created);
-            knownCoachLayouts.Add(created);
+            _knownCoachLayouts.Add(created);
             existing.Add(created);
         }
         

@@ -19,8 +19,6 @@ public class FetchTrainCompositionCommandHandler(
     IPlannedFormationProvider plannedFormationProvider,
     ITrainRunProvider trainRunProvider): CommandHandlerBase<FetchTrainCompositionCommand, List<PlannedTrainPart>>
 {
-    private record PlannedFormationResult(List<PlannedTrainPart> PlannedTrainParts, List<CoachLayout> ResolvedCoachLayouts, List<PlannedFormation> ResolvedPlannedFormations);
-    
     public override async Task<CanFail<List<PlannedTrainPart>>> Handle(FetchTrainCompositionCommand command, CancellationToken cancellationToken)
     {
         var trainRunResult = await trainRunProvider.GetRouteAsync(command.TrainRunId);
@@ -29,7 +27,13 @@ public class FetchTrainCompositionCommandHandler(
         
         await unitOfWork.BeginTransaction(cancellationToken);
         
-        var plannedResult = await GetPlannedAsync(trainRun);
+        var routeStops = trainRun.Stops
+            .Select(s => new RouteStopSnapshot(s.RouteIndex, s.Id))
+            .ToList();
+        var plannedTrainPartsResolver = new PlannedTrainPartsResolver(routeStops);
+        
+        var plannedRouteFormationResolver = new PlannedRouteFormationResolver(new CoachLayoutResolver(coachLayoutRepository), new PlannedFormationResolver(plannedFormationRepository),  plannedFormationProvider);
+        var plannedResult = await plannedRouteFormationResolver.GetPlannedAsync(trainRun, plannedTrainPartsResolver);
         if (plannedResult.HasFailed)
         {
             await unitOfWork.AbortAsync(cancellationToken);
@@ -38,65 +42,5 @@ public class FetchTrainCompositionCommandHandler(
         
         await unitOfWork.CommitAsync(cancellationToken);
         return plannedResult.Value.PlannedTrainParts;
-    }
-
-    private async Task<CanFail<PlannedFormationResult>> GetPlannedAsync(TrainRunRouteDto trainRunRoute)
-    {
-        if (trainRunRoute.ServiceNumber is null) return TrainCompositionErrors.PlannedNotAvailable;
-        var serviceNumber = trainRunRoute.ServiceNumber!.Value;
-        var stops = trainRunRoute.Stops;
-        var knownCoachLayouts =new List<CoachLayout>();
-        var knownPlannedFormations = new List<PlannedFormation>();
-        
-        var routeStops = stops
-            .Select(s => new RouteStopSnapshot(s.RouteIndex, s.Id))
-            .ToList();
-        
-        var plannedTrainPartsResolver = new PlannedTrainPartsResolver(routeStops);
-        List<PlannedTrainPart>? result;
-        while (!plannedTrainPartsResolver.Resolve(out var departureStationToScrape, out var arrivalStationToScrape, out result))
-        {
-            var originStop = stops.First(s => s.Id == departureStationToScrape);
-            var destinationStop = stops.First(s => s.Id == arrivalStationToScrape);
-
-            var observation = await GetPlannedFormationIdsAsync(knownCoachLayouts, knownPlannedFormations, serviceNumber, originStop, destinationStop);
-            if(observation.HasFailed) throw new NotImplementedException();
-            
-            plannedTrainPartsResolver.AddObservation(departureStationToScrape, observation.Value);
-        }
-
-        return new PlannedFormationResult(result,  knownCoachLayouts, knownPlannedFormations);
-    }
-    
-    private async Task<CanFail<List<PlannedFormationId>>> GetPlannedFormationIdsAsync(
-        List<CoachLayout> knownCoachLayouts, List<PlannedFormation> knownPlannedFormations,
-        int serviceNumber, TrainRunStopDto departureStop, TrainRunStopDto destinationStop)
-    {
-        var plannedVehicleDtos = await plannedFormationProvider.GetForSectionAsync(serviceNumber,
-            departureStop.EvaNumber, departureStop.PlannedDepartureTime!.Value,
-            destinationStop.EvaNumber, destinationStop.PlannedArrivalTime!.Value);
-
-        if (plannedVehicleDtos is null) throw new NotImplementedException();
-        var coachLayoutIdentifier = plannedVehicleDtos
-            .SelectMany(v => v.CoachIdentifiers)
-            .ToList();
-        
-        var coachLayouts = await new CoachLayoutResolver(coachLayoutRepository, knownCoachLayouts)
-            .ResolveMany(coachLayoutIdentifier);
-        var coachLayoutDictionary = coachLayouts.ToDictionary(c => c.Identifier);
-        
-        var plannedFormationSnapshots = new List<PlannedFormationSnapshot>();
-        foreach (var vehicle in plannedVehicleDtos)
-        {
-            var coachLayoutIds = vehicle.CoachIdentifiers
-                .Select(c => coachLayoutDictionary[c].Id)
-                .ToList();
-            plannedFormationSnapshots.Add(new PlannedFormationSnapshot(coachLayoutIds));
-        }
-        
-        var plannedFormations = await new PlannedFormationResolver(plannedFormationRepository, knownPlannedFormations)
-            .ResolveManyAsync(plannedFormationSnapshots);
-
-        return plannedFormationSnapshots.Select(pfs => plannedFormations.First(pf => pf.Matches(pfs)).Id).ToList();
     }
 }

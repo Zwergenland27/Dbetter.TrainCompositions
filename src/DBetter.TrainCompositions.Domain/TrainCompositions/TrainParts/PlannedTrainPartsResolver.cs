@@ -5,10 +5,8 @@ using DBetter.TrainCompositions.Domain.Shared.Stations;
 
 namespace DBetter.TrainCompositions.Domain.TrainCompositions.TrainParts;
 
-/// <summary>
-/// Resolves the planned train parts for 
-/// </summary>
-public class PlannedTrainPartsResolver
+/// <inheritdoc/>
+public class PlannedTrainPartsResolver: IPlannedTrainPartsResolver
 {
     private record Interval(RouteStopSnapshot Left, RouteStopSnapshot Right);
 
@@ -23,7 +21,8 @@ public class PlannedTrainPartsResolver
         _observations = [];
     }
 
-    public void AddObservation(ExternalStationId stationId, List<PlannedFormationId> observedFormations)
+    /// <inheritdoc/>
+    public void AddObservation(ExternalStationId departureStation, List<PlannedFormationId> observedFormations)
     {
         var unambiguousFormationIds = new List<UnambiguousFormationId>();
         foreach (var observedFormationId in observedFormations)
@@ -39,16 +38,10 @@ public class PlannedTrainPartsResolver
             }
         }
         
-        _observations[stationId] = unambiguousFormationIds;
+        _observations[departureStation] = unambiguousFormationIds;
     }
 
-    /// <summary>
-    /// Tries to build the train parts of the journey
-    /// </summary>
-    /// <param name="departureStationToScrape">The departure station that should be scraped to capture further information</param>
-    /// <param name="arrivalStationToScrape">The arrival station that should be scraped to capture further information</param>
-    /// <param name="plannedTrainParts">All train parts, when unambiguous configuration has been found</param>
-    /// <returns>True, if an unambiguous configuration has been found</returns>
+    /// <inheritdoc/>
     public bool Resolve(
         [MaybeNullWhen(true)] out ExternalStationId departureStationToScrape,
         [MaybeNullWhen(true)] out ExternalStationId arrivalStationToScrape,

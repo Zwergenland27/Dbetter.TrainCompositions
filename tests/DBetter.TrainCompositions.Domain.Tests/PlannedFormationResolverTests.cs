@@ -29,7 +29,7 @@ public class PlannedFormationResolverTests
     [Fact]
     public async Task ResolveManyAsync_ShouldReturnEmpty_WhenInputIsEmpty()
     {
-        var sut = new PlannedFormationResolver(_repository, []);
+        var sut = new PlannedFormationResolver(_repository);
         _repository.FindManyAsync(Arg.Any<List<PlannedFormationSnapshot>>()).Returns([]);
 
         var result = await sut.ResolveManyAsync([]);
@@ -40,7 +40,7 @@ public class PlannedFormationResolverTests
     [Fact]
     public async Task ResolveManyAsync_ShouldReturnExisting_WhenAllSequencesAlreadyExist()
     {
-        var sut = new PlannedFormationResolver(_repository, []);
+        var sut = new PlannedFormationResolver(_repository);
         var coachId = CoachLayoutId.CreateNew();
         var snapshot = Snapshot(coachId);
         var existing = ExistingFormation(coachId);
@@ -57,7 +57,7 @@ public class PlannedFormationResolverTests
     [Fact]
     public async Task ResolveManyAsync_ShouldCreateAndStore_WhenSequenceDoesNotExist()
     {
-        var sut = new PlannedFormationResolver(_repository, []);
+        var sut = new PlannedFormationResolver(_repository);
         var snapshot = Snapshot(CoachLayoutId.CreateNew());
         var snapshots = new List<PlannedFormationSnapshot>{snapshot};
 
@@ -72,7 +72,7 @@ public class PlannedFormationResolverTests
     [Fact]
     public async Task ResolveManyAsync_ShouldNotCreateAndStoreDuplicate_WhenDuplicateSequenceDoesNotExist()
     {
-        var sut = new PlannedFormationResolver(_repository, []);
+        var sut = new PlannedFormationResolver(_repository);
         var coachLayoutId =  CoachLayoutId.CreateNew();
         var snapshot = Snapshot(coachLayoutId);
         var snapshots = new List<PlannedFormationSnapshot>{snapshot, Snapshot(coachLayoutId)};
@@ -88,7 +88,7 @@ public class PlannedFormationResolverTests
     [Fact]
     public async Task ResolveManyAsync_ShouldCreateOnlyMissing_WhenSomeSequencesAlreadyExist()
     {
-        var sut = new PlannedFormationResolver(_repository, []);
+        var sut = new PlannedFormationResolver(_repository);
         var existingCoachId = CoachLayoutId.CreateNew();
         var newCoachId = CoachLayoutId.CreateNew();
 
@@ -108,7 +108,7 @@ public class PlannedFormationResolverTests
     [Fact]
     public async Task ResolveManyAsync_ShouldReturnAllCreated_WhenMultipleNewSequencesGiven()
     {
-        var sut = new PlannedFormationResolver(_repository, []);
+        var sut = new PlannedFormationResolver(_repository);
         var snapshots = Enumerable.Range(0, 3)
             .Select(_ => Snapshot(CoachLayoutId.CreateNew()))
             .ToList();
@@ -138,7 +138,7 @@ public class PlannedFormationResolverTests
     [Fact]
     public async Task ResolveMany_ShouldNotStoreTwice_WhenDuplicateSequence()
     {
-        var sut = new PlannedFormationResolver(_repository, []);
+        var sut = new PlannedFormationResolver(_repository);
         var existingCoachLayoutId = CoachLayoutId.CreateNew();
         var identifiers = new List<PlannedFormationSnapshot> { Snapshot(existingCoachLayoutId), Snapshot(existingCoachLayoutId)};
         _repository.FindManyAsync(Arg.Any<IEnumerable<PlannedFormationSnapshot>>()).Returns([]);
