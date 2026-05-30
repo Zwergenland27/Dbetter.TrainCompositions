@@ -1,5 +1,5 @@
 using DBetter.TrainCompositions.Infrastructure.CoachLayouts;
-using DBetter.TrainCompositions.Infrastructure.OutboxPattern;
+using DBetter.TrainCompositions.Infrastructure.Messaging;
 using DBetter.TrainCompositions.Infrastructure.PlannedFormations;
 using Microsoft.EntityFrameworkCore;
 

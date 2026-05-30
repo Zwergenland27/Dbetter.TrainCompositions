@@ -1,7 +1,8 @@
 using CleanMediator;
 using DBetter.TrainCompositions.Application.Abstractions;
+using DBetter.TrainCompositions.Infrastructure.Adapters;
 using DBetter.TrainCompositions.Infrastructure.CoachLayouts;
-using DBetter.TrainCompositions.Infrastructure.OutboxPattern;
+using DBetter.TrainCompositions.Infrastructure.Messaging;
 using DBetter.TrainCompositions.Infrastructure.PlannedFormations;
 using DBetter.TrainCompositions.Infrastructure.PostgreSQL;
 using Microsoft.Extensions.Configuration;
@@ -19,9 +20,10 @@ public static class DependencyInjection
         });
         
         services.AddPostgreSql(configuration);
-        services.AddOutbox();
+        services.AddOutbox(configuration);
         
         services.AddCoachLayouts();
         services.AddPlannedFormations();
+        services.AddAdapters(configuration);
     }
 }

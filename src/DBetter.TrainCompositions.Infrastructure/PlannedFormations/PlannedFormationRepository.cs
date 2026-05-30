@@ -1,6 +1,6 @@
 using DBetter.TrainCompositions.Domain.PlannedFormations;
 using DBetter.TrainCompositions.Domain.PlannedFormations.ValueObjects;
-using DBetter.TrainCompositions.Infrastructure.OutboxPattern;
+using DBetter.TrainCompositions.Infrastructure.Messaging;
 using DBetter.TrainCompositions.Infrastructure.PostgreSQL;
 using Microsoft.EntityFrameworkCore;
 

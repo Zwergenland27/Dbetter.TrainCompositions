@@ -1,7 +1,7 @@
 using System.Text.Json;
 using CleanMessageBus.Abstractions;
 
-namespace DBetter.TrainCompositions.Infrastructure.OutboxPattern;
+namespace DBetter.TrainCompositions.Infrastructure.Messaging;
 
 public class OutboxMessage
 {

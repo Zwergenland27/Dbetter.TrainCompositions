@@ -8,6 +8,12 @@ Collects and aggregats all information about train compositions, containing:
 
 :info: this is an extension module of DBetter, it does not work as a standalone application!
 
+# Environment variables
+Name | Description | Remarks | Default value | Development value |
+--- | --- | --- | --- | --- |
+PostgreSQL__ConnectionString | Connection string for the postgres instance | - | - | `Host=localhost;Database=DBetterTrainCompositions;Username=user;Password=password` |
+RabbitMq__Hostname | Hostname of rabbitmq broker | - | - | `localhost` |
+
 ## Development
 * `docker compose up -d`
 

@@ -1,5 +1,4 @@
 using DBetter.TrainCompositions.Application.Abstractions;
-using DBetter.TrainCompositions.Infrastructure.OutboxPattern;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace DBetter.TrainCompositions.Infrastructure.PostgreSQL;

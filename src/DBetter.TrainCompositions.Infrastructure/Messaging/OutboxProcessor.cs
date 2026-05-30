@@ -3,7 +3,7 @@ using DBetter.TrainCompositions.Infrastructure.PostgreSQL;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 
-namespace DBetter.TrainCompositions.Infrastructure.OutboxPattern;
+namespace DBetter.TrainCompositions.Infrastructure.Messaging;
 
 /// <summary>
 /// Process OutboxMessages
