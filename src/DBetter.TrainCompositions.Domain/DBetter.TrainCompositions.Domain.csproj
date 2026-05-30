@@ -15,6 +15,7 @@
         <InternalsVisibleTo Include="DBetter.TrainCompositions.Infrastructure"/>
         <InternalsVisibleTo Include="DBetter.TrainCompositions.Infrastructure.Tests"/>
         <InternalsVisibleTo Include="DBetter.TrainCompositions.Domain.Tests"/>
+        <InternalsVisibleTo Include="DBetter.TrainCompositions.Application.Tests"/>
     </ItemGroup>
 
 </Project>
