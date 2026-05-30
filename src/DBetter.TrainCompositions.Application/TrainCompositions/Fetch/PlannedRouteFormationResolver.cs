@@ -29,7 +29,7 @@ public class PlannedRouteFormationResolver(
             var destinationStop = stops.First(s => s.Id == arrivalStationToScrape);
 
             var observation = await GetPlannedFormationIdsAsync(serviceNumber, originStop, destinationStop);
-            if(observation.HasFailed) throw new NotImplementedException();
+            if (observation.HasFailed) return observation.Errors;
             
             plannedTrainPartsResolver.AddObservation(departureStationToScrape, observation.Value);
         }
@@ -44,7 +44,7 @@ public class PlannedRouteFormationResolver(
             departureStop.EvaNumber, departureStop.PlannedDepartureTime!.Value,
             destinationStop.EvaNumber, destinationStop.PlannedArrivalTime!.Value);
 
-        if (plannedVehicleDtos is null) throw new NotImplementedException();
+        if (plannedVehicleDtos is null) return TrainCompositionErrors.InsufficientData;
         var coachLayoutIdentifier = plannedVehicleDtos
             .SelectMany(v => v.CoachIdentifiers)
             .ToList();
