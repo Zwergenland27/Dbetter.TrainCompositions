@@ -15,6 +15,8 @@ public class PlannedTrainPartsResolver: IPlannedTrainPartsResolver
     private readonly ImmutableList<RouteStopSnapshot> _orderedRoute;
     private readonly Dictionary<ExternalStationId, List<UnambiguousFormationId>> _observations;
 
+    private bool _observationAddedSinceLastResolve = true;
+
     public PlannedTrainPartsResolver(List<RouteStopSnapshot> route) 
     {
         _orderedRoute = route.OrderBy(r => r.RouteIndex).ToImmutableList();
@@ -24,6 +26,7 @@ public class PlannedTrainPartsResolver: IPlannedTrainPartsResolver
     /// <inheritdoc/>
     public void AddObservation(ExternalStationId departureStation, List<PlannedFormationId> observedFormations)
     {
+        _observationAddedSinceLastResolve = true;
         var unambiguousFormationIds = new List<UnambiguousFormationId>();
         foreach (var observedFormationId in observedFormations)
         {
@@ -48,6 +51,10 @@ public class PlannedTrainPartsResolver: IPlannedTrainPartsResolver
         [MaybeNullWhen(false)] out List<PlannedTrainPart> plannedTrainParts)
 
     {
+        if (!_observationAddedSinceLastResolve)
+            throw new InvalidOperationException("Resolve was called without a new observation since the last call.");
+    
+        _observationAddedSinceLastResolve = false;
         var orderedRoute = _orderedRoute.OrderBy(r => r.RouteIndex).ToList();
         var firstDepartureStop = orderedRoute.First();
         var lastDepartureStop = orderedRoute[^2];

@@ -117,4 +117,32 @@ public class PlannedTrainPartsResolverTests
         Assert.Null(arrivalStationToScrape);
         Assert.Equivalent(expectedResult.OrderBy(r => r.PlannedFormationId.Value),  result!.OrderBy(r => r.PlannedFormationId.Value));
     }
+
+    [Fact]
+    public void Resolve_ShouldReturnResult_WhenOnlyTwoStations()
+    {
+        var plannedFormationId = PlannedFormationId.CreateNew();
+        var route = new List<RouteStopSnapshot>
+            { new(0, new ExternalStationId(Guid.NewGuid())), new(1, new ExternalStationId(Guid.NewGuid())) };
+        var identifier = new PlannedTrainPartsResolver(route);
+        identifier.AddObservation(route.First().StationId, [plannedFormationId]);
+        
+        var resolved = identifier.Resolve(out var departureStationToScrape, out var arrivalStationToScrape, out var result);
+        
+        Assert.True(resolved);
+        Assert.Null(departureStationToScrape);
+        Assert.Null(arrivalStationToScrape);
+        Assert.Equivalent(new List<PlannedTrainPart>{new (route.First().StationId, route.Last().StationId, plannedFormationId)}, result);
+    }
+    
+    [Fact]
+    public void Resolve_ShouldThrow_WhenCalledWithoutNewObservation()
+    {
+        var resolver = new PlannedTrainPartsResolver(Route);
+        resolver.AddObservation(Route[0].StationId, [FirstFormationId]);
+        resolver.Resolve(out _, out _, out _);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            resolver.Resolve(out _, out _, out _));
+    }
 }
